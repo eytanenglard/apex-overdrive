@@ -1,0 +1,428 @@
+/* ==========================================================================
+   APEX OVERDRIVE - Pass 4: kid-friendly UI (grade 5), pit-wall question panel,
+   driver photo card, buy dialog, intro guide. Loaded AFTER styles.css.
+   Logical properties only (RTL first).
+   ========================================================================== */
+
+:root {
+  --panel-ink: #0b1226;
+  --panel-bg: rgba(10, 16, 34, 0.94);
+  --ok: #22e57a;
+  --bad: #ff4d6d;
+  --fuel: #ffb020;
+  --garage: #2fe08a;
+  --revive: #ff4d6d;
+}
+
+/* The scanline overlay made the picture look dirty; keep only a soft vignette. */
+.crt-overlay {
+  background: radial-gradient(circle at center, transparent 62%, rgba(4, 6, 14, 0.5) 100%);
+}
+
+/* ---------- Generic helpers ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+button:focus-visible,
+.game-card:focus-visible,
+.veh-chip:focus-visible,
+.ans-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.btn-lg { font-size: 1.25rem; padding: 16px 34px; }
+
+/* ---------- Wallet pop (points go up / down) ---------- */
+.stat-pill.points.pulse-up { animation: walletUp 0.7s ease; }
+.stat-pill.points.pulse-down { animation: walletDown 0.7s ease; }
+@keyframes walletUp { 30% { transform: scale(1.16); box-shadow: 0 0 28px rgba(34, 229, 122, 0.8); } }
+@keyframes walletDown { 30% { transform: scale(0.94); box-shadow: 0 0 28px rgba(255, 77, 109, 0.9); } 60% { transform: translateX(4px); } }
+
+/* ---------- Driver card (title screen) ---------- */
+.driver-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+  background: rgba(11, 17, 36, 0.86);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.driver-photo {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 3px solid var(--neon-cyan);
+  background: radial-gradient(circle at 50% 35%, #22335f, #0b1226);
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.35);
+}
+.driver-photo.empty {
+  display: grid;
+  place-items: center;
+  font-size: 2.6rem;
+}
+.driver-fields { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.driver-fields label { font-size: 0.82rem; color: var(--text-muted); font-weight: 700; }
+.driver-name-input {
+  width: 100%;
+  background: rgba(6, 10, 24, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  color: #fff;
+  font-family: var(--font-he);
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 9px 12px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.driver-name-input:focus { outline: none; border-color: var(--neon-cyan); }
+.driver-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.driver-note { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+
+/* ---------- Showroom buy bar ---------- */
+.showroom-buy {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(255, 176, 32, 0.18), rgba(255, 215, 0, 0.1));
+  border: 1.5px solid rgba(255, 215, 0, 0.6);
+  border-radius: 14px;
+  padding: 10px 14px;
+}
+.showroom-buy.show { display: flex; }
+.showroom-buy .price { font-family: var(--font-display); font-weight: 900; font-size: 1.3rem; color: #ffd86b; }
+.showroom-buy .need { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ---------- Game cards: price tags and clear buy buttons ---------- */
+.price-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  color: #ffd86b;
+  background: rgba(255, 176, 32, 0.14);
+  border: 1px solid rgba(255, 176, 32, 0.5);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.95rem;
+}
+.price-tag.free { color: var(--ok); border-color: rgba(34, 229, 122, 0.5); background: rgba(34, 229, 122, 0.12); }
+.owned-ribbon {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-end: -34px;
+  transform: rotate(-35deg);
+  background: var(--ok);
+  color: #04210f;
+  font-weight: 900;
+  font-size: 0.74rem;
+  padding: 3px 38px;
+}
+.veh-mini-canvas { width: 100%; height: 120px; border-radius: 12px; background: radial-gradient(circle at 50% 60%, rgba(0,240,255,0.15), rgba(5,8,20,0.9) 75%); display:block; }
+
+/* ---------- Buy dialog ---------- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(4, 7, 18, 0.78);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.dialog-backdrop.active { display: flex; animation: screenFadeIn 0.2s ease; }
+.dialog-box {
+  width: min(480px, 100%);
+  background: linear-gradient(165deg, #121b3a, #0a1022);
+  border: 2px solid rgba(255, 215, 0, 0.7);
+  border-radius: 22px;
+  padding: 26px 28px;
+  text-align: center;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+}
+.dialog-box h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 8px; }
+.dialog-box p { color: #c5d4f5; line-height: 1.55; margin-bottom: 6px; }
+.dialog-math { display: flex; justify-content: center; gap: 10px; align-items: center; margin: 14px 0; font-family: var(--font-display); font-size: 1.15rem; direction: ltr; }
+.dialog-math b { color: #ffd86b; }
+.dialog-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+.dialog-box.success { border-color: var(--ok); }
+.dialog-box video, .selfie-video { width: 100%; max-width: 300px; aspect-ratio: 1; object-fit: cover; border-radius: 50%; transform: scaleX(-1); background: #000; border: 3px solid var(--neon-cyan); }
+
+/* ---------- Intro / how to play ---------- */
+.intro-box { width: min(760px, 100%); border-color: var(--neon-cyan); text-align: start; }
+.intro-box h3 { text-align: center; font-size: 1.8rem; }
+.intro-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+.intro-step { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px; text-align: center; }
+.intro-step .big { font-size: 2.4rem; }
+.intro-step b { display: block; margin: 6px 0 4px; font-size: 1.05rem; }
+.intro-step span { font-size: 0.86rem; color: #c5d4f5; line-height: 1.45; }
+@media (max-width: 720px) { .intro-steps { grid-template-columns: 1fr; } }
+
+/* ---------- In-race HUD additions ---------- */
+.hud-driver {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hud-face {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 3px solid var(--neon-cyan);
+  object-fit: cover;
+  background: #14203f;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  transition: transform 0.25s, border-color 0.25s;
+}
+.hud-face.cheer { transform: scale(1.18) rotate(-6deg); border-color: var(--ok); }
+.hud-face.ouch { transform: scale(0.9); border-color: var(--bad); animation: shake 0.4s; }
+@keyframes shake { 20% { transform: translateX(-5px);} 40% { transform: translateX(5px);} 60% { transform: translateX(-4px);} 80% { transform: translateX(4px);} }
+.hud-name { font-weight: 900; font-size: 0.95rem; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hud-coins { font-family: var(--font-display); font-weight: 900; color: #ffd86b; font-size: 0.95rem; }
+.hud-flat-badge {
+  display: none;
+  margin-top: 8px;
+  background: rgba(255, 77, 109, 0.2);
+  border: 1.5px solid var(--bad);
+  color: #ffb3c0;
+  font-weight: 900;
+  border-radius: 10px;
+  padding: 5px 10px;
+  font-size: 0.84rem;
+  animation: pulseDanger 0.6s infinite alternate;
+}
+.hud-flat-badge.show { display: block; }
+
+#pit-banner {
+  position: fixed;
+  inset-block-start: 118px;
+  inset-inline: 0;
+  margin-inline: auto;
+  width: fit-content;
+  max-width: calc(100vw - 24px);
+  z-index: 7;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  background: rgba(8, 12, 26, 0.9);
+  border: 2px solid var(--fuel);
+  border-radius: 999px;
+  padding: 8px 22px 8px 14px;
+  font-weight: 900;
+  font-size: 1.1rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+#pit-banner.show { display: flex; animation: bannerIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+#pit-banner.parts { border-color: var(--garage); }
+#pit-banner .pb-ico { font-size: 1.7rem; }
+#pit-banner .pb-dist { font-family: var(--font-display); color: #ffd86b; font-size: 1.25rem; direction: ltr; }
+@keyframes bannerIn { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- Pit-wall question panel (replaces the old full-screen modal) ---------- */
+#qpanel {
+  position: fixed;
+  inset-block: 84px 20px;
+  inset-inline-start: 22px; /* RTL: the right side of the screen (the 3D view is shifted to the left) */
+  width: min(430px, calc(100vw - 24px));
+  z-index: 30;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--panel-bg);
+  border: 2px solid var(--fuel);
+  border-radius: 24px;
+  padding: 18px 20px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.75);
+  overflow-y: auto;
+  color: var(--text-main);
+}
+#qpanel.show { display: flex; animation: panelIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+#qpanel.fuel { border-color: var(--fuel); }
+#qpanel.parts { border-color: var(--garage); }
+#qpanel.revive { border-color: var(--revive); }
+@keyframes panelIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+[dir='rtl'] #qpanel.show { animation-name: panelInRtl; }
+@keyframes panelInRtl { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.qp-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.qp-station { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.qp-ico { font-size: 2rem; flex: none; }
+.qp-title { font-weight: 900; font-size: 1.15rem; line-height: 1.15; }
+.qp-sub { font-size: 0.82rem; color: var(--text-muted); }
+.qp-streak { display: flex; gap: 4px; flex: none; }
+.qp-streak i { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.15); display: block; }
+.qp-streak i.on { background: #ffb020; box-shadow: 0 0 10px #ffb020; }
+
+.qp-rule {
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 7px 12px;
+  font-size: 0.86rem;
+  color: #d5e0ff;
+  text-align: center;
+  line-height: 1.5;
+}
+.qp-rule b { color: #ffd86b; }
+
+.qp-step { display: none; flex-direction: column; gap: 12px; }
+.qp-step.on { display: flex; }
+
+.qp-q-prompt { font-size: 1.28rem; line-height: 1.5; font-weight: 700; color: #fff; }
+.qp-q-expr {
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  font-weight: 900;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: center;
+  color: #fff;
+  background: rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 14px 10px;
+  letter-spacing: 1px;
+}
+.qp-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.qp-ans {
+  position: relative;
+  background: #1b2a57;
+  border: 2px solid rgba(255,255,255,0.22);
+  border-radius: 16px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 900;
+  padding: 16px 8px;
+  cursor: pointer;
+  direction: ltr;
+  transition: transform 0.12s, background 0.15s, border-color 0.15s;
+}
+.qp-ans:hover:not(:disabled) { background: #26397a; border-color: #fff; transform: translateY(-2px); }
+.qp-ans .key { position: absolute; inset-block-start: 4px; inset-inline-start: 8px; font-family: var(--font-he); font-size: 0.7rem; color: #9fb2e6; font-weight: 700; }
+.qp-ans.correct { background: rgba(34,229,122,0.3); border-color: var(--ok); box-shadow: 0 0 24px rgba(34,229,122,0.5); }
+.qp-ans.wrong { background: rgba(255,77,109,0.25); border-color: var(--bad); opacity: 0.55; animation: shake 0.4s; }
+.qp-ans:disabled { cursor: default; }
+
+.qp-feedback { min-height: 44px; font-weight: 800; font-size: 0.98rem; line-height: 1.4; }
+.qp-feedback.ok { color: var(--ok); }
+.qp-feedback.bad { color: #ffb3c0; }
+.qp-hintrow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.qp-parts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.qp-part {
+  position: relative;
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.18);
+  border-radius: 16px;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  color: #fff;
+  font-family: var(--font-he);
+  transition: transform 0.12s, border-color 0.15s, background 0.15s;
+}
+.qp-part:hover { transform: translateY(-2px); border-color: #fff; }
+.qp-part.selected { border-color: var(--garage); background: rgba(47,224,138,0.16); }
+.qp-part .ico { font-size: 2rem; }
+.qp-part .nm { font-weight: 900; font-size: 0.98rem; margin-top: 2px; }
+.qp-part .ds { font-size: 0.74rem; color: #b8c7e8; line-height: 1.35; margin-top: 2px; }
+.qp-part .need {
+  position: absolute; inset-block-start: -9px; inset-inline-start: 8px;
+  background: var(--bad); color: #fff; font-size: 0.72rem; font-weight: 900; border-radius: 999px; padding: 2px 9px;
+}
+
+.qp-service { align-items: center; text-align: center; padding: 6px 0; }
+.qp-ring { position: relative; width: 150px; height: 150px; }
+.qp-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.qp-ring circle { fill: none; stroke-width: 12; stroke-linecap: round; }
+.qp-ring .bg { stroke: rgba(255,255,255,0.12); }
+.qp-ring .fg { stroke: var(--fuel); transition: stroke-dashoffset 0.15s linear; }
+#qpanel.parts .qp-ring .fg { stroke: var(--garage); }
+.qp-ring .pct { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 2rem; font-weight: 900; direction: ltr; }
+.qp-service-title { font-size: 1.25rem; font-weight: 900; }
+.qp-service-live { font-size: 1.05rem; color: #ffd86b; font-weight: 800; min-height: 1.5em; }
+
+.qp-done { align-items: center; text-align: center; gap: 10px; }
+.qp-done .big { font-size: 3.4rem; }
+.qp-done .title { font-size: 1.5rem; font-weight: 900; color: var(--ok); }
+.qp-gain { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.qp-gain span { background: rgba(34,229,122,0.15); border: 1px solid rgba(34,229,122,0.5); border-radius: 999px; padding: 4px 12px; font-weight: 800; font-size: 0.9rem; }
+
+.qp-floater { position: fixed; z-index: 80; font-family: var(--font-display); font-weight: 900; font-size: 1.8rem; pointer-events: none; animation: floatUp 1.1s ease-out forwards; text-shadow: 0 3px 10px rgba(0,0,0,0.7); }
+.qp-floater.up { color: var(--ok); }
+.qp-floater.down { color: var(--bad); }
+@keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-70px); opacity: 0; } }
+
+/* AI tutor inside the panel */
+#ai-tutor-drawer { margin-top: 0; }
+#tutor-video-canvas { height: 190px; }
+
+/* Responsive: bottom sheet on phones / small windows */
+@media (max-width: 900px) {
+  #qpanel {
+    inset-block: auto 8px;
+    inset-inline: 8px;
+    width: auto;
+    max-height: 62vh;
+    border-radius: 20px;
+    padding: 12px 14px;
+  }
+  .qp-q-expr { font-size: 1.7rem; padding: 8px; }
+  .qp-q-prompt { font-size: 1.05rem; }
+  .qp-ans { font-size: 1.4rem; padding: 12px 6px; }
+  .qp-ring { width: 110px; height: 110px; }
+  #pit-banner { inset-block-start: 74px; font-size: 0.95rem; }
+  .hud-name { display: none; }
+  .driver-card { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- Confetti (vehicle purchased) ---------- */
+.confetti-bit {
+  position: fixed;
+  inset-block-start: -14px;
+  width: 10px;
+  height: 16px;
+  z-index: 90;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+}
+
+/* ---------- Garage vehicle thumbnails ---------- */
+.veh-thumb { width: 100%; aspect-ratio: 11 / 5; object-fit: cover; border-radius: 12px; margin-top: 8px; display: block;
+  background: radial-gradient(circle at 50% 65%, rgba(0,240,255,0.15), rgba(5,8,20,0.9) 75%); }
+.veh-thumb-ph { width: 100%; aspect-ratio: 11 / 5; border-radius: 12px; margin-top: 8px; background: rgba(255,255,255,0.05); }
+.game-card.locked .veh-thumb { filter: saturate(0.7) brightness(0.9); }
+
+/* ---------- Title screen: readable text over the live 3D road ---------- */
+.hero-right {
+  background: linear-gradient(160deg, rgba(7, 10, 24, 0.72), rgba(7, 10, 24, 0.5));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  padding: 22px 24px;
+  backdrop-filter: blur(8px);
+}
+.hero-subtitle { color: #e4ecff; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
+.season-tag { background: rgba(255, 0, 85, 0.28); color: #ffd3e1; }
